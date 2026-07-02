@@ -1,15 +1,10 @@
-import { useRef } from "react";
 import { cards } from "../constants";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 
 const TestimonialSection = () => {
-  const vdRef = useRef([]);
-
   useGSAP(() => {
-    gsap.set(".testimonials-section", {
-      marginTop: "-140vh",
-    });
+    gsap.set(".testimonials-section", { marginTop: "-140vh" });
 
     const tl = gsap.timeline({
       scrollTrigger: {
@@ -20,23 +15,9 @@ const TestimonialSection = () => {
       },
     });
 
-    tl.to(".testimonials-section .first-title", {
-      xPercent: 70,
-    })
-      .to(
-        ".testimonials-section .sec-title",
-        {
-          xPercent: 25,
-        },
-        "<"
-      )
-      .to(
-        ".testimonials-section .third-title",
-        {
-          xPercent: -50,
-        },
-        "<"
-      );
+    tl.to(".testimonials-section .first-title", { xPercent: 70 })
+      .to(".testimonials-section .sec-title", { xPercent: 25 }, "<")
+      .to(".testimonials-section .third-title", { xPercent: -50 }, "<");
 
     const pinTl = gsap.timeline({
       scrollTrigger: {
@@ -48,22 +29,8 @@ const TestimonialSection = () => {
       },
     });
 
-    pinTl.from(".vd-card", {
-      yPercent: 150,
-      stagger: 0.2,
-      ease: "power1.inOut",
-    });
+    pinTl.from(".vd-card", { yPercent: 150, stagger: 0.2, ease: "power1.inOut" });
   });
-
-  const handlePlay = (index) => {
-    const video = vdRef.current[index];
-    video.play();
-  };
-
-  const handlePause = (index) => {
-    const video = vdRef.current[index];
-    video.pause();
-  };
 
   return (
     <section className="testimonials-section">
@@ -73,22 +40,16 @@ const TestimonialSection = () => {
         <h1 className="text-black third-title">Action</h1>
       </div>
 
-      <div className="pin-box">
+      <div className="flex items-center justify-center w-full ps-52 absolute 2xl:bottom-32 bottom-[50vh]">
         {cards.map((card, index) => (
           <div
-            key={index}
-            className={`vd-card ${card.translation} ${card.rotation}`}
-            onMouseEnter={() => handlePlay(index)}
-            onMouseLeave={() => handlePause(index)}
+            key={card.name}
+            className={`vd-card md:w-96 w-80 flex-none md:rounded-[2vw] rounded-3xl -ms-44 overflow-hidden 2xl:relative absolute border-[.5vw] border-milk ${card.translation || ""} ${card.rotation}`}
           >
-            <video
-              ref={(el) => (vdRef.current[index] = el)}
-              src={card.src}
-              playsInline
-              muted
-              loop
-              className="size-full object-cover"
-            />
+            <div className="size-full bg-[#1a1a1a] col-center p-6 gap-3">
+              <div className="text-2xl font-mono font-bold text-teal-400">{String(index + 1).padStart(2, "0")}</div>
+              <h3 className="text-white text-center font-bold text-sm">{card.name}</h3>
+            </div>
           </div>
         ))}
       </div>
