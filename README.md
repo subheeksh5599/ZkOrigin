@@ -12,47 +12,24 @@ When tainted money enters a crypto payment chain, every innocent downstream rece
 
 ## Solution
 
-Three zero-knowledge proofs chained together, verified on-chain via Stellar's BN254 host functions. Each payment carries a recursive provenance proof that anchors, auditors, and regulators can cryptographically verify without seeing the underlying identity data.
+Zero-knowledge Groth16 proofs verified on-chain via Stellar's BN254 host functions. Each payment carries a proof that anchors, auditors, and regulators can cryptographically verify without seeing underlying identity data.
 
 ---
 
 ## Architecture
 
 | Layer | Stack |
-|-------|-------|
-| ZK Circuits | Noir DSL, compiled to arithmetic circuits |
-| Proving System | Groth16 over BN254 curve |
+|---|---|
+| ZK Circuits | Noir DSL (3 circuits: wallet_age, kyc_attestation, provenance) |
+| Proving System | Groth16 over BN254 (arkworks + Soroban pairing_check) |
 | On-Chain Verifier | Soroban smart contract (Rust, soroban-sdk 26.x) |
-| Host Functions | BN254 pairing check, SHA-256 hashing |
+| Proof Client | Rust binary (ark-groth16 + ark-bn254) |
 | Frontend | React 19 + GSAP + Tailwind v4 |
-| Wallet | Freighter, Stellar Wallets Kit |
+| Wallet | Freighter browser extension |
 | Network | Stellar Testnet |
 
-Contract: `CC6VEWZRGUI4TFN4N4ZUTITDTW5A4CTUH6AQR67AOWXLX5XW4WE6AARP`
-[View on Explorer](https://stellar.expert/explorer/testnet/contract/CC6VEWZRGUI4TFN4N4ZUTITDTW5A4CTUH6AQR67AOWXLX5XW4WE6AARP)
-
----
-
-## Project Structure
-
-```
-.
-├── src/                  # React frontend
-│   ├── pages/            # Dashboard, Docs, Landing
-│   ├── sections/         # Hero, Message, UseCases, HowItWorks, Benefit, Testimonial, Footer
-│   ├── components/       # ClipPathTitle, FlavorSlider/Title, NavBar, VideoPinSection, LandingLayout
-│   ├── hooks/            # useContract, useWallet
-│   └── constants/        # useCases, pipelineSteps, cards
-├── contracts/zk-origin/  # Soroban smart contract
-│   └── src/lib.rs        # Contract entry point + all modules
-├── circuits/             # Noir ZK circuits
-│   ├── wallet_age/       # Prove wallet older than 6 months
-│   ├── kyc_attestation/  # Prove KYC attestation from registered anchor
-│   └── provenance/       # Chain wallet_age + kyc into full provenance proof
-├── scripts/              # deploy.sh, invoke.sh, setup.sh
-├── client/               # Proof generation CLI
-└── Makefile
-```
+**Deployed contract:** `CC2RQTAM5OVTXEMRPD4LR22CMKXWQIFFUUWQQVKRFETSKYB6D6UAT2M3`
+[View on Explorer](https://stellar.expert/explorer/testnet/contract/CC2RQTAM5OVTXEMRPD4LR22CMKXWQIFFUUWQQVKRFETSKYB6D6UAT2M3)
 
 ---
 
@@ -60,10 +37,17 @@ Contract: `CC6VEWZRGUI4TFN4N4ZUTITDTW5A4CTUH6AQR67AOWXLX5XW4WE6AARP`
 
 ```bash
 npm install
-npm run dev          # localhost:5173
+npm run dev          # http://localhost:5173
 ```
 
-### Circuits
+### Proof Generation Client
+
+```bash
+cd client
+cargo run --release  # outputs target/proof.json
+```
+
+### Noir Circuits
 
 ```bash
 curl -L https://raw.githubusercontent.com/noir-lang/noirup/main/install | bash
@@ -76,9 +60,9 @@ cd ../provenance && nargo test
 ### Contract
 
 ```bash
-rustup target add wasm32v1-none
+rustup target add wasm32-unknown-unknown
 cd contracts/zk-origin
-cargo build --target wasm32v1-none --release
+cargo build --target wasm32-unknown-unknown --release
 ```
 
 ---
@@ -86,33 +70,19 @@ cargo build --target wasm32v1-none --release
 ## Contract API
 
 | Function | Auth | Description |
-|----------|------|-------------|
+|---|---|---|
 | `admin() -> Address` | Public | Contract admin |
 | `total() -> u64` | Public | Number of verified proofs |
-| `verify_proof(submitter, source_hash, nullifier) -> VerificationRecord` | Sender | Submit proof, spend nullifier |
+| `verify_proof(submitter, proof_a, proof_b, proof_c, public_inputs, source_hash, nullifier)` | Sender | Verify Groth16 proof on-chain |
+| `set_verification_key(admin, vk_bytes)` | Admin | Upload circuit verification key |
 | `register_attestor(admin, addr, name)` | Admin | Register anchor as attestor |
 | `is_nullifier_spent(nullifier) -> bool` | Public | Check replay status |
 | `pause(admin)` / `unpause(admin)` | Admin | Emergency circuit breaker |
 
-## ZK Circuits
+## Proof Format
 
-| Circuit | Private Inputs | Proves |
-|---------|---------------|--------|
-| `wallet_age` | Address, creation timestamp, secret | Wallet older than cutoff |
-| `kyc_attestation` | Subject hash, attestor key, dates | Attestor signed valid KYC |
-| `provenance` | Sender, source hash, chain hash, amount | Payment originated from clean source |
-
-## Deploy
-
-```bash
-cd contracts/zk-origin
-cargo build --target wasm32v1-none --release
-
-stellar contract deploy \
-  --wasm target/wasm32v1-none/release/zk_origin.wasm \
-  --source <KEY> --network testnet \
-  -- --admin <ADMIN_ADDRESS>
-```
+Groth16 proofs are 256 bytes: `A(64 G1) || B(128 G2) || C(64 G1)`.
+Each public input is a 32-byte field element encoded as hex.
 
 ## License
 

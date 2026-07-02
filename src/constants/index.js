@@ -1,10 +1,10 @@
 const useCases = [
-  { name: "Freelancer", color: "green", rotation: "md:rotate-[-8deg] rotate-0" },
-  { name: "Anchor", color: "blue", rotation: "md:rotate-[8deg] rotate-0" },
-  { name: "Regulator", color: "purple", rotation: "md:rotate-[-8deg] rotate-0" },
-  { name: "Remittance", color: "red", rotation: "md:rotate-[8deg] rotate-0" },
-  { name: "Payroll", color: "white", rotation: "md:rotate-[-8deg] rotate-0" },
-  { name: "Enterprise", color: "black", rotation: "md:rotate-[8deg] rotate-0" },
+  { name: "Freelancer", bg: "#94714A", text: "#F5E6D3", rotation: "md:rotate-[-8deg] rotate-0" },
+  { name: "Anchor",     bg: "#2E4057", text: "#C8D6E5", rotation: "md:rotate-[8deg] rotate-0" },
+  { name: "Regulator",  bg: "#5C2E2E", text: "#E8D5D5", rotation: "md:rotate-[-8deg] rotate-0" },
+  { name: "Remittance", bg: "#3D5C3A", text: "#D4E8D0", rotation: "md:rotate-[8deg] rotate-0" },
+  { name: "Payroll",    bg: "#4A5568", text: "#E2E8F0", rotation: "md:rotate-[-8deg] rotate-0" },
+  { name: "Enterprise", bg: "#1A1A1A", text: "#A0A0A0", rotation: "md:rotate-[8deg] rotate-0" },
 ];
 
 const pipelineSteps = [

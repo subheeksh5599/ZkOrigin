@@ -8,15 +8,6 @@ const FlavorSlider = () => {
   const sliderRef = useRef();
   const isTablet = useMediaQuery({ query: "(max-width: 1024px)" });
 
-  const cards = [
-    { bg: "#7f3b2d", text: "#faeade" },
-    { bg: "#a26833", text: "#faeade" },
-    { bg: "#523122", text: "#e3a458" },
-    { bg: "#a02128", text: "#faeade" },
-    { bg: "#e3d3bc", text: "#523122" },
-    { bg: "#222123", text: "#e3a458" },
-  ];
-
   useGSAP(() => {
     const scrollAmount = sliderRef.current.scrollWidth - window.innerWidth;
     if (!isTablet) {
@@ -29,15 +20,27 @@ const FlavorSlider = () => {
   return (
     <div ref={sliderRef} className="slider-wrapper">
       <div className="flavors">
-        {useCases.map((useCase, i) => {
-          const c = cards[i % cards.length];
-          return (
-            <div key={useCase.name} className={`relative z-30 lg:w-[50vw] w-96 lg:h-[70vh] md:w-[90vw] md:h-[50vh] h-80 flex-none ${useCase.rotation}`}>
-              <div className="drinks" style={{ background: `linear-gradient(180deg, ${c.bg} 0%, ${c.bg}88 100%)` }} />
-              <h1 style={{ color: c.text }}>{useCase.name}</h1>
+        {useCases.map((useCase, i) => (
+          <div
+            key={useCase.name}
+            className={`relative z-30 lg:w-[50vw] w-96 lg:h-[70vh] md:w-[90vw] md:h-[50vh] h-80 flex-none ${useCase.rotation} overflow-hidden rounded-[2vw] border-[0.5vw] border-milk/20`}
+          >
+            <div
+              className="drinks"
+              style={{ background: `linear-gradient(180deg, ${useCase.bg} 0%, ${useCase.bg}cc 100%)` }}
+            />
+            <div className="absolute inset-0 w-full h-full" style={{
+              background: `radial-gradient(ellipse at 80% 20%, ${useCase.bg}44 0%, transparent 60%)`,
+            }} />
+            <div className="absolute top-6 right-7 md:top-10 md:right-10 text-[10vw] md:text-[7vw] font-bold leading-none opacity-[0.06]" style={{ color: useCase.text }}>
+              {String(i + 1).padStart(2, "0")}
             </div>
-          );
-        })}
+            <h1 style={{ color: useCase.text }}>{useCase.name}</h1>
+            <div className="absolute bottom-0 left-0 w-full h-1/3" style={{
+              background: `linear-gradient(0deg, ${useCase.bg} 0%, transparent 100%)`,
+            }} />
+          </div>
+        ))}
       </div>
     </div>
   );

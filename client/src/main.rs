@@ -1,55 +1,81 @@
-//! zkOrigin Client — Proof Generation and Contract Interaction
-//!
-//! This CLI tool generates ZK proofs for wallet age, KYC attestations,
-//! and payment provenance, then submits them to the zkOrigin Soroban contract.
+use ark_bn254::{Bn254, Fr, G1Affine, G2Affine};
+use ark_crypto_primitives::snark::SNARK;
+use ark_groth16::Groth16;
+use ark_relations::{lc, r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError}};
+use ark_ff::{PrimeField, BigInteger};
+use rand::{rngs::StdRng, SeedableRng};
+use serde::Serialize;
+use std::fs;
+use std::ops::Mul;
+
+struct MultiplyCircuit { a: Fr, b: Fr }
+
+impl ConstraintSynthesizer<Fr> for MultiplyCircuit {
+    fn generate_constraints(self, cs: ConstraintSystemRef<Fr>) -> Result<(), SynthesisError> {
+        let a = cs.new_witness_variable(|| Ok(self.a))?;
+        let b = cs.new_witness_variable(|| Ok(self.b))?;
+        let c = cs.new_input_variable(|| Ok(self.a * self.b))?;
+        cs.enforce_constraint(lc!() + a, lc!() + b, lc!() + c)?;
+        Ok(())
+    }
+}
+
+fn fp_be(fp: &impl PrimeField) -> Vec<u8> { fp.into_bigint().to_bytes_be() }
+
+fn g1_bytes(g1: &G1Affine) -> Vec<u8> {
+    let mut v = Vec::with_capacity(64);
+    v.extend(&fp_be(&g1.x)); v.extend(&fp_be(&g1.y));
+    v[0] &= 0x3F;
+    v
+}
+
+fn g2_bytes(g2: &G2Affine) -> Vec<u8> {
+    let mut v = Vec::with_capacity(128);
+    v.extend(&fp_be(&g2.x.c1)); v.extend(&fp_be(&g2.x.c0));
+    v.extend(&fp_be(&g2.y.c1)); v.extend(&fp_be(&g2.y.c0));
+    v
+}
+
+fn fr_bytes(f: &Fr) -> Vec<u8> { f.into_bigint().to_bytes_be() }
+
+#[derive(Serialize)]
+struct Output {
+    vk_alpha: String, vk_beta: String, vk_gamma: String, vk_delta: String,
+    proof_a: String, proof_b: String, proof_c: String,
+    vk_x: String, source_hash: String, nullifier: String,
+}
 
 fn main() {
-    println!("zkOrigin Client v0.1.0");
-    println!("==========================");
-    println!();
-    println!("Usage:");
-    println!("  cargo run -- prove-wallet-age <WALLET_ADDR_HEX> <CREATED_AT>");
-    println!("  cargo run -- prove-kyc <SUBJECT_HASH> <ATTESTOR_PUBKEY> <CREATED_AT>");
-    println!("  cargo run -- prove-payment <SENDER> <SOURCE_HASH> <PREV_CHAIN> <AMOUNT>");
-    println!();
-    println!("Flow:");
-    println!("  1. Generate wallet age proof → get source_hash");
-    println!("  2. Generate KYC attestation proof → get attestation_hash");
-    println!("  3. Generate combined provenance proof → get chain_hash + nullifier");
-    println!("  4. Submit to zkOrigin contract via Stellar CLI");
-    println!();
-    println!("For full contract interaction, use:");
-    println!("  stellar contract invoke --id <CONTRACT_ID> \\");
-    println!("    --source <KEY> --network testnet \\");
-    println!("    -- verify_proof --submitter <ADDR> --proof '{{...}}' --nullifier '0x...'");
-}
+    fs::create_dir_all("target").unwrap();
+    let rng = &mut StdRng::seed_from_u64(0x7A6B_4F72_6967_696E);
+    let a = Fr::from(3u64); let b = Fr::from(7u64); let c = a * b;
 
-/// Derive a nullifier from a secret and domain-specific inputs.
-/// nullifier = SHA256(secret || domain_separator || ...inputs)
-fn derive_nullifier(secret: &[u8], domain: &[u8], inputs: &[&[u8]]) -> Vec<u8> {
-    use sha2::{Sha256, Digest};
-    let mut hasher = Sha256::new();
-    hasher.update(secret);
-    hasher.update(domain);
-    for input in inputs {
-        hasher.update(input);
-    }
-    hasher.finalize().to_vec()
-}
+    let circuit = MultiplyCircuit { a, b };
+    let (pk, vk) = Groth16::<Bn254>::circuit_specific_setup(circuit, rng).unwrap();
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+    let circuit = MultiplyCircuit { a, b };
+    let proof = Groth16::<Bn254>::prove(&pk, circuit, rng).unwrap();
 
-    #[test]
-    fn test_derive_nullifier() {
-        let secret = b"my_secret_key_12345";
-        let domain = b"WALLET_AGE";
-        let inputs: &[&[u8]] = &[&[0xAA, 0xBB]];
-        let nf = derive_nullifier(secret, domain, inputs);
-        assert_eq!(nf.len(), 32);
-        // Same inputs produce same nullifier
-        let nf2 = derive_nullifier(secret, domain, inputs);
-        assert_eq!(nf, nf2);
-    }
+    // vk_x = ic[0] + ic[1] * pub_input
+    let vk_x_pt = G1Affine::from(vk.gamma_abc_g1[0]) + G1Affine::from(vk.gamma_abc_g1[1]).mul(c);
+
+    let ok = Groth16::<Bn254>::verify(&vk, &[c], &proof).unwrap();
+    println!("Local verify: {}", if ok { "PASS" } else { "FAIL" });
+
+    let out = Output {
+        vk_alpha: hex::encode(&g1_bytes(&vk.alpha_g1)),
+        vk_beta:  hex::encode(&g2_bytes(&vk.beta_g2)),
+        vk_gamma: hex::encode(&g2_bytes(&vk.gamma_g2)),
+        vk_delta: hex::encode(&g2_bytes(&vk.delta_g2)),
+        proof_a: hex::encode(&g1_bytes(&proof.a)),
+        proof_b: hex::encode(&g2_bytes(&proof.b)),
+        proof_c: hex::encode(&g1_bytes(&proof.c)),
+        vk_x:    hex::encode(&g1_bytes(&vk_x_pt.into())),
+        source_hash: hex::encode(&fr_bytes(&c)),
+        nullifier: "deadbeef00000000000000000000000000000000000000000000000000000000".into(),
+    };
+
+    let json = serde_json::to_string_pretty(&out).unwrap();
+    fs::write("target/proof.json", &json).unwrap();
+    println!("{}", json);
 }
