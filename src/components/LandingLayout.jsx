@@ -14,8 +14,11 @@ gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 
 const LandingLayout = () => {
   useGSAP(() => {
-    ScrollSmoother.create({ smooth: 3, effects: true });
-  }, { scope: "#smooth-wrapper" });
+    ScrollSmoother.create({
+      smooth: 3,
+      effects: true,
+    });
+  });
 
   return (
     <main>
