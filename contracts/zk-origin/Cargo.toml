@@ -1,0 +1,23 @@
+[package]
+name = "zk-origin"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+soroban-sdk = "26.0.1"
+
+[dev-dependencies]
+soroban-sdk = { version = "26.0.1", features = ["testutils"] }
+
+[features]
+default = []
+
+[profile.release]
+opt-level = "z"
+lto = true
+debug = false
+strip = true
+codegen-units = 1

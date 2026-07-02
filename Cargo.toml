@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "contracts/zk-origin",
+    "client",
+]
+resolver = "2"

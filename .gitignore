@@ -1,0 +1,43 @@
+
+build/
+# Build outputs
+# Circuit artifacts
+circuits/*/*.json
+circuits/*/proofs/
+circuits/*/target/
+contracts/zk-origin/target/
+# Dependencies
+dist
+dist/
+dist-ssr
+.DS_Store
+# Editor directories and files
+.env
+# Environment
+# IDE
+.idea
+.idea/
+lerna-debug.log*
+*.local
+*.log
+logs
+# Logs
+*.njsproj
+node_modules
+npm-debug.log*
+*.ntvs*
+# OS
+pnpm-debug.log*
+*.secret
+*.sln
+*.suo
+*.sw?
+*.swo
+*.swp
+target/
+Thumbs.db
+.vscode/
+.vscode/*
+!.vscode/extensions.json
+yarn-debug.log*
+yarn-error.log*
