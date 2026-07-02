@@ -56,7 +56,6 @@ const HeroSection = () => {
   return (
     <section className="bg-main-bg">
       <div className="hero-container">
-        <div className="hero-bg-gradient" />
         <div className="hero-content opacity-0">
           <div className="overflow-hidden">
             <h1 className="hero-title">Prove Your Money</h1>
