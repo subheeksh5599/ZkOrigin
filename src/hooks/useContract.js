@@ -3,6 +3,11 @@ import { useState, useCallback, useEffect } from "react";
 const CONTRACT_ID = "CC2RQTAM5OVTXEMRPD4LR22CMKXWQIFFUUWQQVKRFETSKYB6D6UAT2M3";
 const RPC_URL = "https://soroban-testnet.stellar.org";
 
+function getFreighter() {
+  if (typeof window === "undefined") return null;
+  return window.freighter || window.freighterApi || null;
+}
+
 function hexToBytes(hex) {
   const h = hex.startsWith("0x") ? hex.slice(2) : hex;
   const len = h.length / 2;
@@ -59,8 +64,9 @@ export function useContract() {
       const { rpc, xdr, Address, Contract, TransactionBuilder } = await import("@stellar/stellar-sdk");
       const server = new rpc.Server(RPC_URL);
 
-      if (!window.freighter) throw new Error("Freighter not installed");
-      const network = await window.freighter.getNetwork();
+      const f = getFreighter();
+      if (!f) throw new Error("Freighter not installed");
+      const network = await f.getNetwork();
       if (network !== "TESTNET") throw new Error("Switch Freighter to Testnet");
 
       const account = await server.getAccount(pubKey);
@@ -90,7 +96,7 @@ export function useContract() {
         .build();
 
       tx = await server.prepareTransaction(tx);
-      const signed = await window.freighter.signTransaction(tx.toXDR(), "TESTNET");
+      const signed = await f.signTransaction(tx.toXDR(), "TESTNET");
       const sendTx = TransactionBuilder.fromXDR(
         signed,
         "Test SDF Network ; September 2015",
