@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
+import {
+  isConnected,
+  getAddress,
+  requestAccess,
+  getNetwork,
+} from "@stellar/freighter-api";
 
 const FREIGHTER_URL = "https://www.freighter.app";
-
-function getFreighter() {
-  if (typeof window === "undefined") return null;
-  return window.freighter || window.freighterApi || null;
-}
 
 export function useWallet() {
   const [address, setAddress] = useState(null);
@@ -14,38 +15,60 @@ export function useWallet() {
   const [freighterInstalled, setFreighterInstalled] = useState(null);
 
   useEffect(() => {
+    let cancelled = false;
     let attempts = 0;
     const maxAttempts = 20;
 
-    function check() {
+    async function check() {
       attempts++;
-      const f = getFreighter();
-      if (f) {
-        setFreighterInstalled(true);
-        return;
-      }
-      if (attempts < maxAttempts) {
-        setTimeout(check, 250);
-      } else {
-        setFreighterInstalled(false);
+      try {
+        const res = await isConnected();
+        if (!cancelled) {
+          if (res.isConnected) {
+            setFreighterInstalled(true);
+            const addrRes = await getAddress();
+            if (addrRes.address) {
+              setAddress(addrRes.address);
+              setConnected(true);
+              const netRes = await getNetwork();
+              if (netRes.network) setNetwork(netRes.network);
+            }
+          } else if (attempts < maxAttempts) {
+            setTimeout(check, 250);
+            return;
+          } else {
+            setFreighterInstalled(false);
+          }
+        }
+      } catch (e) {
+        if (!cancelled && attempts < maxAttempts) {
+          setTimeout(check, 250);
+        } else if (!cancelled) {
+          setFreighterInstalled(false);
+        }
       }
     }
 
     check();
+    return () => { cancelled = true; };
   }, []);
 
   const connect = useCallback(async () => {
-    const f = getFreighter();
-    if (!f) {
-      window.open(FREIGHTER_URL, "_blank");
-      return;
-    }
     try {
-      const pubKey = await f.getPublicKey();
-      const net = await f.getNetwork();
-      setAddress(pubKey);
-      setNetwork(net);
+      const res = await isConnected();
+      if (!res.isConnected) {
+        window.open(FREIGHTER_URL, "_blank");
+        return;
+      }
+
+      const addrRes = await requestAccess();
+      if (addrRes.error) throw new Error(addrRes.error.message || addrRes.error);
+
+      setAddress(addrRes.address);
       setConnected(true);
+
+      const netRes = await getNetwork();
+      if (netRes.network) setNetwork(netRes.network);
     } catch (e) {
       console.error("Freighter connection failed:", e);
     }
