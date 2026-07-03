@@ -96,14 +96,14 @@ export default function Dashboard() {
           </Link>
 
           <div className="flex items-center gap-3">
-            <span className="rounded-full border border-white/[0.06] px-3 py-1 text-[11px] text-zinc-600 tabular-nums">
+            <span className="rounded-full border border-white/[0.06] px-3 py-1 text-[11px] text-zinc-400 tabular-nums">
               Testnet
             </span>
             {wallet.connected ? (
               <div className="flex items-center gap-2 rounded-lg border border-teal-500/10 bg-teal-500/[0.03] px-3.5 py-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
                 <span className="text-xs font-mono text-teal-400">{truncate(wallet.address, 6)}</span>
-                <button onClick={wallet.disconnect} className="ml-1 rounded-md border border-transparent px-2 py-0.5 text-[11px] text-zinc-600 hover:text-zinc-400 hover:border-white/[0.06]">
+                <button onClick={wallet.disconnect} className="ml-1 rounded-md border border-transparent px-2 py-0.5 text-[11px] text-zinc-400 hover:text-zinc-400 hover:border-white/[0.06]">
                   Disconnect
                 </button>
               </div>
@@ -120,7 +120,7 @@ export default function Dashboard() {
 
         <div className="mb-8">
           <h1 className="text-xl font-semibold text-white">Proof Dashboard</h1>
-          <p className="mt-1 text-sm text-zinc-600">
+          <p className="mt-1 text-sm text-zinc-400">
             Submit zero-knowledge Groth16 proofs to the zkOrigin contract on Stellar testnet.
           </p>
         </div>
@@ -132,9 +132,9 @@ export default function Dashboard() {
             { label: "Verification", value: "Groth16 / BN254", detail: "256-byte proofs" },
           ].map((stat) => (
             <div key={stat.label} className="bg-[#0c0c0d] px-5 py-4">
-              <div className="text-[11px] text-zinc-600 tracking-wide uppercase">{stat.label}</div>
+              <div className="text-[11px] text-zinc-400 tracking-wide uppercase">{stat.label}</div>
               <div className="mt-1.5 text-xl font-mono font-semibold text-white">{stat.value}</div>
-              <div className="mt-0.5 text-[11px] text-zinc-600">{stat.detail}</div>
+              <div className="mt-0.5 text-[11px] text-zinc-400">{stat.detail}</div>
             </div>
           ))}
         </div>
@@ -157,7 +157,7 @@ export default function Dashboard() {
                     }`}
                   >
                     <div className="font-semibold">{c.label}</div>
-                    <div className="mt-0.5 text-[10px] opacity-60">{c.description}</div>
+                    <div className="mt-0.5 text-[10px] text-zinc-500">{c.description}</div>
                   </button>
                 ))}
               </div>
@@ -168,7 +168,7 @@ export default function Dashboard() {
                 <div className="text-xs font-medium text-zinc-500">Proof Data</div>
                 <button
                   onClick={() => { setProofJson(""); setProofA(""); setProofB(""); setProofC(""); }}
-                  className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors"
+                  className="text-[10px] text-zinc-400 hover:text-zinc-400 transition-colors"
                 >
                   Clear
                 </button>
@@ -176,53 +176,53 @@ export default function Dashboard() {
 
               <div className="mb-4 p-3 rounded-lg border border-teal-500/10 bg-teal-500/[0.02]">
                 <label className="block text-[11px] text-zinc-500 mb-1.5">
-                  Paste proof.json <span className="text-zinc-700">— from client target/proof.json</span>
+                  Paste proof.json <span className="text-zinc-500">— from client target/proof.json</span>
                 </label>
                 <textarea
                   value={proofJson}
                   onChange={(e) => { setProofJson(e.target.value); parseProofJson(e.target.value); }}
                   placeholder='{"vk":{...},"proof":{"proof_a":"...","proof_b":"...","proof_c":"...","vk_x":"...","source_hash":"..."}}'
                   rows={4}
-                  className="w-full rounded-lg border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5 font-mono text-[11px] text-white placeholder:text-zinc-700 focus:border-teal-500/30 focus:outline-none transition-colors resize-y"
+                  className="w-full rounded-lg border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5 font-mono text-[11px] text-white placeholder:text-zinc-500 focus:border-teal-500/30 focus:outline-none transition-colors resize-y"
                 />
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[11px] text-zinc-600 mb-1.5">Proof A <span className="text-zinc-700">— G1 point, 64 bytes hex</span></label>
+                  <label className="block text-[11px] text-zinc-400 mb-1.5">Proof A <span className="text-zinc-500">— G1 point, 64 bytes hex</span></label>
                   <input type="text" value={proofA} onChange={(e) => setProofA(e.target.value)}
                     placeholder="eccb22b6068acb4a2a13491cdca3ca90..."
-                    className="w-full rounded-lg border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5 font-mono text-[13px] text-white placeholder:text-zinc-700 focus:border-teal-500/30 focus:outline-none transition-colors" />
+                    className="w-full rounded-lg border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5 font-mono text-[13px] text-white placeholder:text-zinc-500 focus:border-teal-500/30 focus:outline-none transition-colors" />
                 </div>
                 <div>
-                  <label className="block text-[11px] text-zinc-600 mb-1.5">Proof B <span className="text-zinc-700">— G2 point, 128 bytes hex</span></label>
+                  <label className="block text-[11px] text-zinc-400 mb-1.5">Proof B <span className="text-zinc-500">— G2 point, 128 bytes hex</span></label>
                   <input type="text" value={proofB} onChange={(e) => setProofB(e.target.value)}
                     placeholder="92bc33ab72e829f8f63f05aeb12543d5..."
-                    className="w-full rounded-lg border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5 font-mono text-[13px] text-white placeholder:text-zinc-700 focus:border-teal-500/30 focus:outline-none transition-colors" />
+                    className="w-full rounded-lg border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5 font-mono text-[13px] text-white placeholder:text-zinc-500 focus:border-teal-500/30 focus:outline-none transition-colors" />
                 </div>
                 <div>
-                  <label className="block text-[11px] text-zinc-600 mb-1.5">Proof C <span className="text-zinc-700">— G1 point, 64 bytes hex</span></label>
+                  <label className="block text-[11px] text-zinc-400 mb-1.5">Proof C <span className="text-zinc-500">— G1 point, 64 bytes hex</span></label>
                   <input type="text" value={proofC} onChange={(e) => setProofC(e.target.value)}
                     placeholder="067364423a243f4c57cc389762ce2f83..."
-                    className="w-full rounded-lg border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5 font-mono text-[13px] text-white placeholder:text-zinc-700 focus:border-teal-500/30 focus:outline-none transition-colors" />
+                    className="w-full rounded-lg border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5 font-mono text-[13px] text-white placeholder:text-zinc-500 focus:border-teal-500/30 focus:outline-none transition-colors" />
                 </div>
                 <div>
-                  <label className="block text-[11px] text-zinc-600 mb-1.5">VK_X <span className="text-zinc-700">— precomputed ic[0]+ic[1]*pub, 64 bytes hex</span></label>
+                  <label className="block text-[11px] text-zinc-400 mb-1.5">VK_X <span className="text-zinc-500">— precomputed ic[0]+ic[1]*pub, 64 bytes hex</span></label>
                   <input type="text" value={vkX} onChange={(e) => setVkX(e.target.value)}
                     placeholder="1500000000000000000000000000000000000000000000000000000000000000"
-                    className="w-full rounded-lg border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5 font-mono text-[13px] text-white placeholder:text-zinc-700 focus:border-teal-500/30 focus:outline-none transition-colors" />
+                    className="w-full rounded-lg border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5 font-mono text-[13px] text-white placeholder:text-zinc-500 focus:border-teal-500/30 focus:outline-none transition-colors" />
                 </div>
                 <div>
-                  <label className="block text-[11px] text-zinc-600 mb-1.5">Source Hash <span className="text-zinc-700">— hex identifier</span></label>
+                  <label className="block text-[11px] text-zinc-400 mb-1.5">Source Hash <span className="text-zinc-500">— hex identifier</span></label>
                   <input type="text" value={sourceHash} onChange={(e) => setSourceHash(e.target.value)}
                     placeholder="1500000000000000000000000000000000000000000000000000000000000000"
-                    className="w-full rounded-lg border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5 font-mono text-[13px] text-white placeholder:text-zinc-700 focus:border-teal-500/30 focus:outline-none transition-colors" />
+                    className="w-full rounded-lg border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5 font-mono text-[13px] text-white placeholder:text-zinc-500 focus:border-teal-500/30 focus:outline-none transition-colors" />
                 </div>
                 <div>
-                  <label className="block text-[11px] text-zinc-600 mb-1.5">Nullifier <span className="text-zinc-700">— 32 bytes hex, prevents replay</span></label>
+                  <label className="block text-[11px] text-zinc-400 mb-1.5">Nullifier <span className="text-zinc-500">— 32 bytes hex, prevents replay</span></label>
                   <input type="text" value={nullifier} onChange={(e) => setNullifier(e.target.value)}
                     placeholder="deadbeef00000000000000000000000000000000000000000000000000000000"
-                    className="w-full rounded-lg border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5 font-mono text-[13px] text-white placeholder:text-zinc-700 focus:border-teal-500/30 focus:outline-none transition-colors" />
+                    className="w-full rounded-lg border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5 font-mono text-[13px] text-white placeholder:text-zinc-500 focus:border-teal-500/30 focus:outline-none transition-colors" />
                 </div>
 
                 <button
@@ -253,7 +253,7 @@ export default function Dashboard() {
                     <div className="min-w-0 flex-1">
                       {txResult.success ? (
                         <div className="space-y-1.5">
-                          <div className="font-mono text-[11px] text-zinc-600 break-all">{txResult.txHash}</div>
+                          <div className="font-mono text-[11px] text-zinc-400 break-all">{txResult.txHash}</div>
                           <a href={`https://stellar.expert/explorer/testnet/tx/${txResult.txHash}`} target="_blank" rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 text-[11px] text-teal-400 hover:text-teal-300 transition-colors">
                             Stellar.Expert
@@ -283,7 +283,7 @@ export default function Dashboard() {
                     { label: "Status", value: contract.networkOk ? "Online" : "Offline", color: contract.networkOk ? "text-teal-400" : "text-red-400" },
                   ].map((row) => (
                     <div key={row.label} className="flex justify-between text-[11px]">
-                      <span className="text-zinc-600">{row.label}</span>
+                      <span className="text-zinc-400">{row.label}</span>
                       <span className={`font-mono ${row.color || "text-zinc-400"}`}>{row.value}</span>
                     </div>
                   ))}
@@ -311,7 +311,7 @@ export default function Dashboard() {
                     "pause(admin) / unpause(admin)",
                   ].map((fn, i) => (
                     <div key={i} className="flex items-center gap-2.5 rounded-md px-3 py-1.5 hover:bg-white/[0.02]">
-                      <span className="text-[10px] text-zinc-700 font-mono tabular-nums w-3">{i + 1}</span>
+                      <span className="text-[10px] text-zinc-500 font-mono tabular-nums w-3">{i + 1}</span>
                       <span className="text-[11px] font-mono text-zinc-500">{fn}</span>
                     </div>
                   ))}
@@ -329,8 +329,8 @@ export default function Dashboard() {
                   { step: "4", label: "Paste proof.json or hex fields below" },
                 ].map((s) => (
                   <div key={s.step} className="flex gap-3">
-                    <span className="flex-none w-5 h-5 mt-0.5 rounded-full border border-white/[0.06] flex items-center justify-center text-[10px] text-zinc-600 font-mono">{s.step}</span>
-                    <span className="text-[11px] text-zinc-600 leading-relaxed">{s.label}</span>
+                    <span className="flex-none w-5 h-5 mt-0.5 rounded-full border border-white/[0.06] flex items-center justify-center text-[10px] text-zinc-400 font-mono">{s.step}</span>
+                    <span className="text-[11px] text-zinc-400 leading-relaxed">{s.label}</span>
                   </div>
                 ))}
               </div>
