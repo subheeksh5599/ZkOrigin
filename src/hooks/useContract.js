@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { rpc, xdr, Address, Contract, scValToNative, TransactionBuilder } from "@stellar/stellar-sdk";
 
 const CONTRACT_ID = "CC2RQTAM5OVTXEMRPD4LR22CMKXWQIFFUUWQQVKRFETSKYB6D6UAT2M3";
 const RPC_URL = "https://soroban-testnet.stellar.org";
@@ -21,15 +22,14 @@ export function useContract() {
 
   const fetchStats = useCallback(async () => {
     try {
-      const { SorobanRpc, Contract, scValToNative } = await import("@stellar/stellar-sdk");
-      const rpc = new SorobanRpc.Server(RPC_URL);
+      const rpc = new rpc.Server(RPC_URL);
 
       let tx = new Contract(CONTRACT_ID).call("total");
       tx = await rpc.prepareTransaction(tx);
       let result;
       try {
         const sim = await rpc.simulateTransaction(tx);
-        if (SorobanRpc.Api.isSimulationSuccess(sim)) {
+        if (rpc.Api.isSimulationSuccess(sim)) {
           result = scValToNative(sim.result.retval);
         }
       } catch (_) {}
@@ -42,7 +42,7 @@ export function useContract() {
       tx = await rpc.prepareTransaction(tx);
       try {
         const sim = await rpc.simulateTransaction(tx);
-        if (SorobanRpc.Api.isSimulationSuccess(sim)) {
+        if (rpc.Api.isSimulationSuccess(sim)) {
           setAdmin(scValToNative(sim.result.retval));
         }
       } catch (_) {}
@@ -56,8 +56,7 @@ export function useContract() {
   const submitProof = useCallback(async (data, pubKey) => {
     setLoading(true);
     try {
-      const { SorobanRpc, xdr, Address, Contract } = await import("@stellar/stellar-sdk");
-      const rpc = new SorobanRpc.Server(RPC_URL);
+      const rpc = new rpc.Server(RPC_URL);
 
       if (!window.freighter) throw new Error("Freighter not installed");
       const network = await window.freighter.getNetwork();
@@ -73,7 +72,7 @@ export function useContract() {
       const nullifier = hexToBytes(data.nullifier);
 
 
-      let tx = new SorobanRpc.TransactionBuilder(account, {
+      let tx = new TransactionBuilder(account, {
         fee: "100000",
         networkPassphrase: "Test SDF Network ; September 2015",
       })
@@ -92,7 +91,7 @@ export function useContract() {
 
       tx = await rpc.prepareTransaction(tx);
       const signed = await window.freighter.signTransaction(tx.toXDR(), "TESTNET");
-      const sendTx = SorobanRpc.TransactionBuilder.fromXDR(
+      const sendTx = TransactionBuilder.fromXDR(
         signed,
         "Test SDF Network ; September 2015",
       );
@@ -112,13 +111,12 @@ export function useContract() {
 
   const checkNullifier = useCallback(async (nullifierHex) => {
     try {
-      const { SorobanRpc, Contract, xdr, scValToNative } = await import("@stellar/stellar-sdk");
-      const rpc = new SorobanRpc.Server(RPC_URL);
+      const rpc = new rpc.Server(RPC_URL);
       const nf = hexToBytes(nullifierHex);
       let tx = new Contract(CONTRACT_ID).call("is_nullifier_spent", xdr.ScVal.scvBytes(nf));
       tx = await rpc.prepareTransaction(tx);
       const sim = await rpc.simulateTransaction(tx);
-      if (SorobanRpc.Api.isSimulationSuccess(sim)) {
+      if (rpc.Api.isSimulationSuccess(sim)) {
         return scValToNative(sim.result.retval);
       }
     } catch (_) {}
@@ -128,8 +126,7 @@ export function useContract() {
   const setVk = useCallback(async (vkHex, pubKey) => {
     setLoading(true);
     try {
-      const { SorobanRpc, xdr, Address, Contract } = await import("@stellar/stellar-sdk");
-      const rpc = new SorobanRpc.Server(RPC_URL);
+      const rpc = new rpc.Server(RPC_URL);
 
       if (!window.freighter) throw new Error("Freighter not installed");
       const network = await window.freighter.getNetwork();
@@ -138,7 +135,7 @@ export function useContract() {
       const account = await rpc.getAccount(pubKey);
       const vkBytes = hexToBytes(vkHex);
 
-      let tx = new SorobanRpc.TransactionBuilder(account, {
+      let tx = new TransactionBuilder(account, {
         fee: "100000",
         networkPassphrase: "Test SDF Network ; September 2015",
       })
@@ -152,7 +149,7 @@ export function useContract() {
 
       tx = await rpc.prepareTransaction(tx);
       const signed = await window.freighter.signTransaction(tx.toXDR(), "TESTNET");
-      const sendTx = SorobanRpc.TransactionBuilder.fromXDR(signed, "Test SDF Network ; September 2015");
+      const sendTx = TransactionBuilder.fromXDR(signed, "Test SDF Network ; September 2015");
       const response = await rpc.sendTransaction(sendTx);
 
       if (response.status === "PENDING" || response.status === "SUCCESS") {
