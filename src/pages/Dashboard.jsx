@@ -48,6 +48,19 @@ export default function Dashboard() {
     }
   };
 
+  const loadMockProof = async (num) => {
+    try {
+      const response = await fetch(`/proof_${num}.json`);
+      if (response.ok) {
+        const text = await response.text();
+        setProofJson(text);
+        parseProofJson(text);
+      }
+    } catch (e) {
+      console.error("Failed to load mock proof:", e);
+    }
+  };
+
   const handleSubmit = async () => {
     setTxResult(null);
 
@@ -167,12 +180,36 @@ export default function Dashboard() {
             <div className="rounded-xl border border-white/[0.05] bg-white/[0.01] p-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="text-xs font-medium text-zinc-300">Proof Data</div>
-                <button
-                  onClick={() => { setProofJson(""); setProofA(""); setProofB(""); setProofC(""); }}
-                  className="text-[10px] text-zinc-200 hover:text-zinc-200 transition-colors"
-                >
-                  Clear
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => loadMockProof(1)}
+                    className="text-[10px] text-teal-400 hover:text-teal-350 transition-colors cursor-pointer"
+                  >
+                    Load Proof 1
+                  </button>
+                  <span className="text-[10px] text-zinc-600">|</span>
+                  <button
+                    onClick={() => loadMockProof(2)}
+                    className="text-[10px] text-teal-400 hover:text-teal-350 transition-colors cursor-pointer"
+                  >
+                    Load Proof 2
+                  </button>
+                  <span className="text-[10px] text-zinc-600">|</span>
+                  <button
+                    onClick={() => {
+                      setProofJson("");
+                      setProofA("");
+                      setProofB("");
+                      setProofC("");
+                      setVkX("");
+                      setSourceHash("");
+                      setNullifier("");
+                    }}
+                    className="text-[10px] text-zinc-200 hover:text-white transition-colors cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                </div>
               </div>
 
               <div className="mb-4 p-3 rounded-lg border border-teal-500/10 bg-teal-500/[0.02]">
