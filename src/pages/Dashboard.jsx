@@ -109,7 +109,7 @@ export default function Dashboard() {
               </div>
             ) : (
               <button onClick={wallet.connect} className="rounded-lg bg-teal-500 px-4 py-1.5 text-xs font-semibold text-black hover:bg-teal-400 active:bg-teal-600 transition-colors">
-                {wallet.freighterInstalled ? "Connect" : "Get Freighter"}
+                {wallet.freighterInstalled === null ? "Detecting..." : wallet.freighterInstalled ? "Connect" : "Get Freighter"}
               </button>
             )}
           </div>
