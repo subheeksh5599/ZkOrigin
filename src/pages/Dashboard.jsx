@@ -34,14 +34,14 @@ export default function Dashboard() {
   const parseProofJson = (json) => {
     try {
       const p = JSON.parse(json);
-      if (p.proof) {
-        setProofA(p.proof.proof_a || "");
-        setProofB(p.proof.proof_b || "");
-        setProofC(p.proof.proof_c || "");
-        setVkX(p.proof.vk_x || "");
-        setSourceHash(p.proof.source_hash || "");
-        setNullifier(p.proof.nullifier_example || "");
-      }
+      // Handle both nested {proof:{proof_a:...}} and flat {proof_a:...} formats
+      const d = p.proof || p;
+      setProofA(d.proof_a || "");
+      setProofB(d.proof_b || "");
+      setProofC(d.proof_c || "");
+      setVkX(d.vk_x || "");
+      setSourceHash(d.source_hash || "");
+      setNullifier(d.nullifier || d.nullifier_example || "");
       return true;
     } catch {
       return false;
@@ -55,13 +55,14 @@ export default function Dashboard() {
     if (proofJson.trim()) {
       try {
         const p = JSON.parse(proofJson);
+        const d = p.proof || p;
         data = {
-          proof_a: p.proof?.proof_a || "",
-          proof_b: p.proof?.proof_b || "",
-          proof_c: p.proof?.proof_c || "",
-          vk_x: p.proof?.vk_x || "",
-          source_hash: sourceHash || p.proof?.source_hash || "0000000000000000000000000000000000000000000000000000000000000000",
-          nullifier: nullifier || p.proof?.nullifier_example || "deadbeef00000000000000000000000000000000000000000000000000000000",
+          proof_a: d.proof_a || "",
+          proof_b: d.proof_b || "",
+          proof_c: d.proof_c || "",
+          vk_x: d.vk_x || "",
+          source_hash: sourceHash || d.source_hash || "0000000000000000000000000000000000000000000000000000000000000000",
+          nullifier: nullifier || d.nullifier || d.nullifier_example || "deadbeef00000000000000000000000000000000000000000000000000000000",
         };
       } catch { return; }
     } else {
