@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect } from "react";
-import { rpc, xdr, Address, Contract, scValToNative, TransactionBuilder } from "@stellar/stellar-sdk";
 
 const CONTRACT_ID = "CC2RQTAM5OVTXEMRPD4LR22CMKXWQIFFUUWQQVKRFETSKYB6D6UAT2M3";
 const RPC_URL = "https://soroban-testnet.stellar.org";
@@ -7,7 +6,7 @@ const RPC_URL = "https://soroban-testnet.stellar.org";
 function hexToBytes(hex) {
   const h = hex.startsWith("0x") ? hex.slice(2) : hex;
   const len = h.length / 2;
-  const bytes = Buffer.alloc(len);
+  const bytes = new Uint8Array(len);
   for (let i = 0; i < len; i++) {
     bytes[i] = parseInt(h.substring(i * 2, i * 2 + 2), 16);
   }
@@ -22,13 +21,14 @@ export function useContract() {
 
   const fetchStats = useCallback(async () => {
     try {
-      const rpc = new rpc.Server(RPC_URL);
+      const { rpc, Contract, scValToNative } = await import("@stellar/stellar-sdk");
+      const server = new rpc.Server(RPC_URL);
 
       let tx = new Contract(CONTRACT_ID).call("total");
-      tx = await rpc.prepareTransaction(tx);
+      tx = await server.prepareTransaction(tx);
       let result;
       try {
-        const sim = await rpc.simulateTransaction(tx);
+        const sim = await server.simulateTransaction(tx);
         if (rpc.Api.isSimulationSuccess(sim)) {
           result = scValToNative(sim.result.retval);
         }
@@ -39,9 +39,9 @@ export function useContract() {
       }
 
       tx = new Contract(CONTRACT_ID).call("admin");
-      tx = await rpc.prepareTransaction(tx);
+      tx = await server.prepareTransaction(tx);
       try {
-        const sim = await rpc.simulateTransaction(tx);
+        const sim = await server.simulateTransaction(tx);
         if (rpc.Api.isSimulationSuccess(sim)) {
           setAdmin(scValToNative(sim.result.retval));
         }
@@ -56,13 +56,14 @@ export function useContract() {
   const submitProof = useCallback(async (data, pubKey) => {
     setLoading(true);
     try {
-      const rpc = new rpc.Server(RPC_URL);
+      const { rpc, xdr, Address, Contract, TransactionBuilder } = await import("@stellar/stellar-sdk");
+      const server = new rpc.Server(RPC_URL);
 
       if (!window.freighter) throw new Error("Freighter not installed");
       const network = await window.freighter.getNetwork();
       if (network !== "TESTNET") throw new Error("Switch Freighter to Testnet");
 
-      const account = await rpc.getAccount(pubKey);
+      const account = await server.getAccount(pubKey);
 
       const proofA = hexToBytes(data.proof_a);
       const proofB = hexToBytes(data.proof_b);
@@ -70,7 +71,6 @@ export function useContract() {
       const vkX = hexToBytes(data.vk_x);
       const sourceHash = hexToBytes(data.source_hash);
       const nullifier = hexToBytes(data.nullifier);
-
 
       let tx = new TransactionBuilder(account, {
         fee: "100000",
@@ -89,14 +89,14 @@ export function useContract() {
         .setTimeout(30)
         .build();
 
-      tx = await rpc.prepareTransaction(tx);
+      tx = await server.prepareTransaction(tx);
       const signed = await window.freighter.signTransaction(tx.toXDR(), "TESTNET");
       const sendTx = TransactionBuilder.fromXDR(
         signed,
         "Test SDF Network ; September 2015",
       );
 
-      const response = await rpc.sendTransaction(sendTx);
+      const response = await server.sendTransaction(sendTx);
       if (response.status === "PENDING" || response.status === "SUCCESS") {
         fetchStats();
         return { success: true, txHash: response.hash };
@@ -111,11 +111,12 @@ export function useContract() {
 
   const checkNullifier = useCallback(async (nullifierHex) => {
     try {
-      const rpc = new rpc.Server(RPC_URL);
+      const { rpc, Contract, xdr, scValToNative } = await import("@stellar/stellar-sdk");
+      const server = new rpc.Server(RPC_URL);
       const nf = hexToBytes(nullifierHex);
       let tx = new Contract(CONTRACT_ID).call("is_nullifier_spent", xdr.ScVal.scvBytes(nf));
-      tx = await rpc.prepareTransaction(tx);
-      const sim = await rpc.simulateTransaction(tx);
+      tx = await server.prepareTransaction(tx);
+      const sim = await server.simulateTransaction(tx);
       if (rpc.Api.isSimulationSuccess(sim)) {
         return scValToNative(sim.result.retval);
       }
@@ -123,49 +124,9 @@ export function useContract() {
     return null;
   }, []);
 
-  const setVk = useCallback(async (vkHex, pubKey) => {
-    setLoading(true);
-    try {
-      const rpc = new rpc.Server(RPC_URL);
-
-      if (!window.freighter) throw new Error("Freighter not installed");
-      const network = await window.freighter.getNetwork();
-      if (network !== "TESTNET") throw new Error("Switch Freighter to Testnet");
-
-      const account = await rpc.getAccount(pubKey);
-      const vkBytes = hexToBytes(vkHex);
-
-      let tx = new TransactionBuilder(account, {
-        fee: "100000",
-        networkPassphrase: "Test SDF Network ; September 2015",
-      })
-        .addOperation(new Contract(CONTRACT_ID).call(
-          "set_verification_key",
-          new Address(pubKey).toScVal(),
-          xdr.ScVal.scvBytes(vkBytes),
-        ))
-        .setTimeout(30)
-        .build();
-
-      tx = await rpc.prepareTransaction(tx);
-      const signed = await window.freighter.signTransaction(tx.toXDR(), "TESTNET");
-      const sendTx = TransactionBuilder.fromXDR(signed, "Test SDF Network ; September 2015");
-      const response = await rpc.sendTransaction(sendTx);
-
-      if (response.status === "PENDING" || response.status === "SUCCESS") {
-        return { success: true, txHash: response.hash };
-      }
-      return { success: false, error: response.status };
-    } catch (e) {
-      return { success: false, error: e.message || String(e) };
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   return {
     loading, totalProofs, admin, networkOk,
-    fetchStats, submitProof, checkNullifier, setVk,
+    fetchStats, submitProof, checkNullifier,
     contractId: CONTRACT_ID,
   };
 }
