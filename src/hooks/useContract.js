@@ -1,12 +1,8 @@
 import { useState, useCallback, useEffect } from "react";
+import { isConnected, getNetwork, signTransaction } from "@stellar/freighter-api";
 
 const CONTRACT_ID = "CC2RQTAM5OVTXEMRPD4LR22CMKXWQIFFUUWQQVKRFETSKYB6D6UAT2M3";
 const RPC_URL = "https://soroban-testnet.stellar.org";
-
-function getFreighter() {
-  if (typeof window === "undefined") return null;
-  return window.freighter || window.freighterApi || null;
-}
 
 function hexToBytes(hex) {
   const h = hex.startsWith("0x") ? hex.slice(2) : hex;
@@ -64,10 +60,14 @@ export function useContract() {
       const { rpc, xdr, Address, Contract, TransactionBuilder } = await import("@stellar/stellar-sdk");
       const server = new rpc.Server(RPC_URL);
 
-      const f = getFreighter();
-      if (!f) throw new Error("Freighter not installed");
-      const network = await f.getNetwork();
-      if (network !== "TESTNET") throw new Error("Switch Freighter to Testnet");
+      const connectedRes = await isConnected();
+      if (!connectedRes || !connectedRes.isConnected) {
+        throw new Error("Freighter not installed");
+      }
+      const netRes = await getNetwork();
+      if (!netRes || netRes.network !== "TESTNET") {
+        throw new Error("Switch Freighter to Testnet");
+      }
 
       const account = await server.getAccount(pubKey);
 
@@ -96,9 +96,14 @@ export function useContract() {
         .build();
 
       tx = await server.prepareTransaction(tx);
-      const signed = await f.signTransaction(tx.toXDR(), "TESTNET");
+      const { signedTxXdr, error: signError } = await signTransaction(tx.toXDR(), {
+        networkPassphrase: "Test SDF Network ; September 2015",
+      });
+      if (signError) {
+        throw new Error(signError);
+      }
       const sendTx = TransactionBuilder.fromXDR(
-        signed,
+        signedTxXdr,
         "Test SDF Network ; September 2015",
       );
 
